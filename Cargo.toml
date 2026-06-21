@@ -1,0 +1,10 @@
+[package]
+name = "claris"
+version = "0.1.0"
+edition = "2024"
+authors = ["Ceyhun"]
+license = "MIT OR Apache-2.0"
+description = "A clean, minimal, and fluent logging framework for Rust."
+
+[dependencies]
+log = { version = "0.4.33", features = ["std"] }
