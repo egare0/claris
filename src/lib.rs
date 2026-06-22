@@ -66,7 +66,7 @@ impl Log for ClarisLogger {
         let mut max_len = 0;
 
         for (module_name, module_level) in &self.modules {
-            if target.starts_with(module_name) && module_name.len() > max_len {
+            if module_matches(target, module_name) && module_name.len() > max_len {
                 specific_level = Some(*module_level);
                 max_len = module_name.len();
             }
@@ -107,4 +107,10 @@ impl Log for ClarisLogger {
     }
 
     fn flush(&self) {}
+}
+
+fn module_matches(target: &str, module_name: &str) -> bool {
+    target
+        .strip_prefix(module_name)
+        .map_or(false, |rest| rest.is_empty() || rest.starts_with("::"))
 }
