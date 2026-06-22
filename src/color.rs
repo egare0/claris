@@ -21,7 +21,3 @@ impl Color {
         }
     }
 }
-
-pub fn paint(color: Color, text: &str) -> String {
-    format!("{}{}{}", color.as_str(), text, Color::Reset.as_str())
-}

@@ -84,8 +84,6 @@ impl Log for ClarisLogger {
             return;
         }
 
-        let level_str = format!("{:<5}", record.level().as_str());
-
         if self.colors_enabled {
             let color = match record.level() {
                 Level::Error => Color::Red,
@@ -95,14 +93,15 @@ impl Log for ClarisLogger {
                 Level::Trace => Color::Magenta
             };
 
-            println!("{gray}[{level} {gray}{target}]{reset} {msg}",
+            println!("{gray}[{c}{level:<5}{reset}{gray} {target}]{reset} {msg}",
                      gray = Color::Gray.as_str(),
+                c = color.as_str(),
+                     level = record.level().as_str(),
                      reset = Color::Reset.as_str(),
-                     level = color::paint(color, &level_str),
                      target = record.target(),
                      msg = record.args());
         } else {
-            println!("[{:>5} {}] {}", level_str, record.target(), record.args());
+            println!("[{:<5} {}] {}", record.level().as_str(), record.target(), record.args());
         }
     }
 
