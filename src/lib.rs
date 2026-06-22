@@ -1,3 +1,4 @@
+use std::io::{self, Write};
 use log::{Level, LevelFilter, Metadata, Record, SetLoggerError, Log};
 use crate::color::Color;
 
@@ -84,7 +85,10 @@ impl Log for ClarisLogger {
             return;
         }
 
-        if self.colors_enabled {
+        let stdout = io::stdout();
+        let mut out = stdout.lock();
+
+        let result = if self.colors_enabled {
             let color = match record.level() {
                 Level::Error => Color::Red,
                 Level::Warn => Color::Yellow,
@@ -93,15 +97,19 @@ impl Log for ClarisLogger {
                 Level::Trace => Color::Magenta
             };
 
-            println!("{gray}[{c}{level:<5}{reset}{gray} {target}]{reset} {msg}",
+            writeln!(out, "{gray}[{c}{level:<5}{reset}{gray} {target}]{reset} {msg}",
                      gray = Color::Gray.as_str(),
                 c = color.as_str(),
                      level = record.level().as_str(),
                      reset = Color::Reset.as_str(),
                      target = record.target(),
-                     msg = record.args());
+                     msg = record.args())
         } else {
-            println!("[{:<5} {}] {}", record.level().as_str(), record.target(), record.args());
+            writeln!(out, "[{:<5} {}] {}", record.level().as_str(), record.target(), record.args())
+        };
+
+        if let Err(e) = result {
+            eprintln!("claris: failed to write log line: {e}");
         }
     }
 
