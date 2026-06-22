@@ -10,6 +10,12 @@ pub struct Claris {
     colors_enabled: bool,
 }
 
+impl Default for Claris {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Claris {
     pub fn new() -> Self {
         Self {
@@ -19,16 +25,19 @@ impl Claris {
         }
     }
 
+    #[must_use]
     pub fn with_level(mut self, level: LevelFilter) -> Self {
         self.level = level;
         self
     }
 
+    #[must_use]
     pub fn with_module_level(mut self, target: &str, level: LevelFilter) -> Self {
         self.modules.push((target.to_string(), level));
         self
     }
 
+    #[must_use]
     pub fn with_colors(mut self, enabled: bool) -> Self {
         self.colors_enabled = enabled;
         self
