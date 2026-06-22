@@ -136,22 +136,11 @@ impl Log for ClarisLogger {
     /// the caller wrote.
     fn enabled(&self, metadata: &Metadata) -> bool {
         let target = metadata.target();
-
-        let mut specific_level = None;
-        let mut max_len = 0;
-
-        for (module_name, module_level) in &self.modules {
-            if module_matches(target, module_name) && module_name.len() > max_len {
-                specific_level = Some(*module_level);
-                max_len = module_name.len();
-            }
-        }
-
-        if let Some(level) = specific_level {
-            metadata.level() <= level
-        } else {
-            metadata.level() <= self.level
-        }
+        let level = self.modules.iter()
+            .filter(|(name, _)| module_matches(target, name))
+            .max_by_key(|(name, _)| name.len())
+            .map_or(self.level, |(_, level)| *level);
+        metadata.level() <= level
     }
 
     /// Writes one log line to stdout, colored or plain depending on
@@ -252,5 +241,14 @@ mod tests {
         );
         assert!(logger.enabled(&meta("test_crate::deep::fn", Level::Trace)));
         assert!(!logger.enabled(&meta("test_crate::other", Level::Trace)));
+    }
+
+    #[test]
+    fn duplicate_module_registration_last_one_wins() {
+        let logger = logger(
+            LevelFilter::Off,
+            &[("wgpu", LevelFilter::Error), ("wgpu", LevelFilter::Trace)],
+        );
+        assert!(logger.enabled(&meta("wgpu", Level::Trace)));
     }
 }
