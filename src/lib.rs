@@ -1,4 +1,4 @@
-use std::io::{self, Write};
+use std::io::{self, IsTerminal, Write};
 use log::{Level, LevelFilter, Metadata, Record, SetLoggerError, Log};
 use crate::color::Color;
 
@@ -15,7 +15,7 @@ impl Claris {
         Self {
             level: LevelFilter::Info,
             modules: Vec::new(),
-            colors_enabled: true,
+            colors_enabled: io::stdout().is_terminal(),
         }
     }
 
