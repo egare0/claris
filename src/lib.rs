@@ -4,6 +4,7 @@ use crate::color::Color;
 
 mod color;
 
+#[derive(Debug)]
 pub struct Claris {
     level: LevelFilter,
     modules: Vec<(String, LevelFilter)>,
