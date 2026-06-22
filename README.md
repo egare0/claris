@@ -1,29 +1,20 @@
-# Claris
+# claris
 
-A clean, minimal, and fluent logging framework for Rust. Zero-dependency by default.
-Built on top of the standard 'log' facade.
+A minimal, fluent logging implementation built on top of the
+[`log`](https://docs.rs/log) facade. No async runtime, no config files,
+no macros beyond what `log` already gives you.
 
-## Features
-
-- **Zero Dependency:** Only relies on the official 'log' crate. No bloat.
-- **Fluent Builder API:** Easy to configure with method chaining.
-- **Module-Level Filtering:** Set different log levels for specific modules or crates.
-- **Beautiful Output:** Formatted with ANSI escape sequences for clarity, keeping output perfectly aligned.
+The only dependency is the `log` facade itself, which your application
+almost certainly already has.
 
 ## Installation
-
-Add this to your 'Cargo.toml':
-
 ```toml
 [dependencies]
 log = "0.4"
-claris = "0.1.0"
+claris = "0.1.1"
 ```
 
 ## Usage
-
-Claris uses a builder pattern to configure the logger before initializing it globally.
-
 ```rust
 use claris::Claris;
 use log::LevelFilter;
@@ -31,24 +22,43 @@ use log::LevelFilter;
 fn main() {
     Claris::new()
         .with_level(LevelFilter::Info)
-        // Mute noisy crates, only allow their errors
-        .with_module_level("wgpu", LevelFilter::Error)
-        // Allow deep debugging for a specific internal module
-        .with_module_level("my_module::core", LevelFilter::Trace)
+        .with_module_level("noisy_dep", LevelFilter::Error)
         .init()
         .unwrap();
-    
-    log::info!("Claris initialized successfully.");
-    log::warn!("This is a warning.");
-    log::error!("Critical failure!");
-    
-    // This will only print if you configured the specific module or global level
-    log::debug!("Debugging internal states.");
+
+    log::info!("ready");
 }
 ```
 
+## Features
+
+**Fluent builder.** `Claris::new()` returns a builder — chain `with_*`
+methods, call `.init()` once.
+
+**Per-module level overrides.** `with_module_level("wgpu", LevelFilter::Error)`
+silences a noisy dependency without touching your own logs. Matching happens
+on `::` boundaries, so `"wgpu"` affects `wgpu` and `wgpu::core` but not
+`wgpu_hal` — they share a prefix, not a namespace. If multiple overrides
+match the same target, the most specific one wins.
+
+**Automatic color detection.** Colors are on when stdout is an interactive
+terminal and off otherwise, so redirecting output to a file or a CI log
+won't fill it with ANSI escape codes. Override this with `.with_colors(bool)`
+if you need to.
+
+**Zero-allocation hot path.** No heap allocations per log call — level
+strings and ANSI color codes are `&'static str` and written directly into
+the output, so logging doesn't put pressure on the allocator.
+
+## Log Format
+```bash
+[INFO  my_crate::module] message here
+```
+
+Colors are applied to the level and the surrounding brackets when stdout
+is a terminal.
+
 ## License
 
-Dual-licensed under either of:
-- MIT License ('LICENSE-MIT')
-- Apache License, Version 2.0 ('LICENSE-APACHE')
+Licensed under either of [MIT](LICENSE-MIT) or
+[Apache-2.0](LICENSE-APACHE) at your option.
