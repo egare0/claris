@@ -2,9 +2,13 @@
 name = "claris"
 version = "0.1.0"
 edition = "2024"
+rust-version = "1.85"
 authors = ["Ceyhun"]
 license = "MIT OR Apache-2.0"
 description = "A clean, minimal, and fluent logging framework for Rust."
+repository = "https://github.com/egare0/claris"
+keywords = ["logging", "log", "logger", "fluent", "builder"]
+categories = ["development-tools::debugging"]
 
 [dependencies]
 log = { version = "0.4.33", features = ["std"] }
