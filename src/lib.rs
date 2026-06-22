@@ -114,3 +114,56 @@ fn module_matches(target: &str, module_name: &str) -> bool {
         .strip_prefix(module_name)
         .map_or(false, |rest| rest.is_empty() || rest.starts_with("::"))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn logger(level: LevelFilter, modules: &[(&str, LevelFilter)]) -> ClarisLogger {
+        ClarisLogger {
+            level,
+            modules: modules.iter().map(|(n, l)| (n.to_string(), *l)).collect(),
+            colors_enabled: false,
+        }
+    }
+
+    fn meta(target: &str, level: Level) -> Metadata<'_> {
+        Metadata::builder().target(target).level(level).build()
+    }
+
+    #[test]
+    fn falls_back_to_global_level_without_module_override() {
+        let logger = logger(LevelFilter::Warn, &[]);
+        assert!(logger.enabled(&meta("anything", Level::Warn)));
+        assert!(!logger.enabled(&meta("anything", Level::Info)));
+    }
+
+    #[test]
+    fn exact_module_match_overrides_global_level() {
+        let logger = logger(LevelFilter::Error, &[("wgpu", LevelFilter::Trace)]);
+        assert!(logger.enabled(&meta("wgpu", Level::Trace)));
+    }
+
+    #[test]
+    fn nested_module_match_overrides_global_level() {
+        let logger = logger(LevelFilter::Error, &[("wgpu", LevelFilter::Trace)]);
+        assert!(logger.enabled(&meta("wgpu::core::device", Level::Trace)));
+    }
+
+    #[test]
+    fn sibling_crate_with_same_prefix_is_not_matched() {
+        let logger = logger(LevelFilter::Error, &[("wgpu", LevelFilter::Trace)]);
+        assert!(!logger.enabled(&meta("wgpu_hal", Level::Trace)));
+        assert!(!logger.enabled(&meta("wgpu_hal::instance", Level::Trace)));
+    }
+
+    #[test]
+    fn longest_matching_module_wins() {
+        let logger = logger(
+            LevelFilter::Error,
+            &[("test_crate", LevelFilter::Warn), ("test_crate::deep", LevelFilter::Trace)],
+        );
+        assert!(logger.enabled(&meta("test_crate::deep::fn", Level::Trace)));
+        assert!(!logger.enabled(&meta("test_crate::other", Level::Trace)));
+    }
+}
