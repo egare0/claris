@@ -188,7 +188,7 @@ impl Log for ClarisLogger {
 fn module_matches(target: &str, module_name: &str) -> bool {
     target
         .strip_prefix(module_name)
-        .map_or(false, |rest| rest.is_empty() || rest.starts_with("::"))
+        .is_some_and(|rest| rest.is_empty() || rest.starts_with("::"))
 }
 
 #[cfg(test)]
